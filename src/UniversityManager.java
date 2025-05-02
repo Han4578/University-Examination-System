@@ -1,3 +1,7 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 public class UniversityManager {
     static private User currentUser;
     
@@ -59,12 +63,15 @@ public class UniversityManager {
     }
 
     public static void loadAll() {
+        try {
+            Files.createDirectories(Paths.get("src/data/semester_courses"));
+        } catch (IOException e) {
+            System.out.println("Folders Could Not Be Created. Aborting...");
+            System.exit(1);
+        }
         UserManager.getInstance().load();
-    }
-
-    public static void saveAll() {
-        UserManager.getInstance().save();
-        SemesterManager.getInstance().save();
-        CourseManager.getInstance().save();
+        CourseManager.getInstance().load();
+        SemesterManager.getInstance().load();
+        Exam.load();
     }
 }

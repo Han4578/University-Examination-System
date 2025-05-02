@@ -1,10 +1,9 @@
-import java.util.ArrayList;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 public class Examiner extends User {
     final public static int NUMBER_OF_PARAMETERS = 5;
     private static int lastID = 0;
-    TreeSet<Exam> assignedExams = new TreeSet<>();
+    TreeMap<String, Exam> assignedExams = new TreeMap<>();
 
     public Examiner() {
         this("S000000", "Default Examiner", "password", "", "");
@@ -20,7 +19,7 @@ public class Examiner extends User {
     }
 
     public static int getLastID() {
-        return lastID;
+        return Examiner.lastID;
     }
 
     public static void setLastID(int lastID) {
@@ -45,7 +44,7 @@ public class Examiner extends User {
                     1. Show Profile
                     2. Edit Profile
                     3. Grade Exams
-                    4. Save All
+                    4. View Exams Assigned
                     5. Log Out
                     6. Quit
 
@@ -60,18 +59,12 @@ public class Examiner extends User {
                     this.editProfile();
                     break;
                 case 3:
-                    ArrayList<Exam> examList = new ArrayList<>(this.assignedExams);
-                    int num = 0;
-
-                    for (Exam exam: examList) {
-                        System.out.printf("%d. %d %s\n", ++num, exam.getSemesterCourse().getSemester(), exam.getExamTitle());
-                    }
-
-                    int input = Input.getIntInput("\nSelect Exam to Grade(Enter 0 to Cancel): ", 0, num);
-                    if (input > 0) examList.get(input - 1).gradeExam();
+                    Exam exam = this.selectExamFromAssigned();
+                    if (exam == null) break;
+                    exam.gradeExam();
                     break;
                 case 4:
-                    UniversityManager.saveAll();
+                    this.printExams();
                     break;
                 case 5:
                     System.out.println("\nLog Out Success!");
@@ -82,19 +75,6 @@ public class Examiner extends User {
                     break;
             }
         }
-    }
-
-    public void showProfile() {
-        System.out.printf(
-        """
-
-        User ID: %s
-        Name: %s
-        Password: %s
-        Email: %s
-        Phone Number: %s\n
-        """
-        , this.getUserID(), this.getName(), this.getPassword(), this.getEmail(), this.getPhoneNumber());
     }
 
     public void editProfileAsAdmin() {
@@ -111,8 +91,8 @@ public class Examiner extends User {
                     5. Show Profile
                     6. Add Assigned Exam
                     7. Remove Assigned Exam
-                    8. Save All
-                    9. Cancel
+                    8. Show Assigned Exams
+                    9. Back
 
                     Your input: \
                     """, 1, 9
@@ -134,19 +114,25 @@ public class Examiner extends User {
                     this.showProfile();
                     break;               
                 case 6:
-                    Exam examToAssign = SemesterManager.selectSemesterCourseFromInput().selectExamFromInput();
-                    this.assignedExams.add(examToAssign);
-                    examToAssign.addExaminer(this);
+                    SemesterCourse semesterCourse = SemesterManager.getInstance().selectSemesterCourseFromInput();
+                    if (semesterCourse == null) break;
+                    Exam examToAdd = semesterCourse.selectExamFromInput();
+                    if (examToAdd == null) break;
+                    examToAdd.addExaminer(this);
+                    this.addAssignedExam(examToAdd);
                     System.out.println("Examiner Successfully Assigned");
+                    examToAdd.getSemesterCourse().save();
                     break;                
                 case 7:
-                    Exam examToRemove = SemesterManager.selectSemesterCourseFromInput().selectExamFromInput();
-                    this.assignedExams.remove(examToRemove);
+                    Exam examToRemove = this.selectExamFromAssigned();
+                    if (examToRemove == null) break;
                     examToRemove.removeExaminer(this);
-                    System.out.println("Examiner Successfully Removed");
+                    this.removeAssignedExam(examToRemove);
+                    System.out.println("Examiner Successfully Unassigned");
+                    examToRemove.getSemesterCourse().save();
                     break;                
                 case 8:
-                    UniversityManager.saveAll();
+                    this.printExams();
                     break;
                 case 9:
                     return;                
@@ -168,11 +154,10 @@ public class Examiner extends User {
                     2. Change Email
                     3. Change Phone Number
                     4. Show Profile
-                    5. Save
-                    6. Cancel
+                    5. Back
 
                     Your input: \
-                    """, 1, 6
+                    """, 1, 5
                 )
             ) {
                 case 1:
@@ -188,15 +173,43 @@ public class Examiner extends User {
                     this.showProfile();
                     break;                
                 case 5:
-                    UserManager.getInstance().save();
-                    break;                
-                case 6:
                     return;                
                 default:
                     break;
             }
         }        
     }
+
+    public Exam selectExamFromAssigned() {
+        String examID = Input.getStringInput("Enter Exam ID: ");
+        if (!this.assignedExams.containsKey(examID)) {
+            System.out.println("Exam Not Found");
+            return null;
+        }
+        return this.assignedExams.get(examID);
+    }
+
+    public void printExams() {
+        System.out.println("\nAssigned Exams");
+        if (this.assignedExams.size() > 0) {
+            for (Exam exam: this.assignedExams.values()) {
+                System.out.println(exam.getDetailsString());
+            }
+        } else System.out.println("No Exams Assigned");
+    }
+    
+	public void addAssignedExam(Exam exam) {
+        if (exam == null) return;
+        if (this.assignedExams.containsKey(exam.getExamID())) {
+            System.out.println("Exam Has Already Been Assigned");
+            return;
+        }
+        this.assignedExams.put(exam.getExamID(), exam);
+	}
+    
+	public void removeAssignedExam(Exam exam) {
+        this.assignedExams.remove(exam.getExamID());
+	}
     
     public static String getParameterTitle() {
         return String.format("%-20s %-20s %-20s %-20s %s", "User ID", "Name", "Password", "Email", "Phone Number");
@@ -206,7 +219,25 @@ public class Examiner extends User {
         return new String[]{this.getUserID(), this.getName(), this.getPassword(), this.getEmail(), this.getPhoneNumber()};
     }
 
-    public void delete() {
-        
+    public void onDelete() {
+        for (Exam exam: this.assignedExams.values()) {
+            exam.removeExaminer(this);
+            exam.getSemesterCourse().save();
+        }
     }
+
+    @Override
+    public String toString() {
+        return String.format(
+            """
+    
+            User ID: %s
+            Name: %s
+            Password: %s
+            Email: %s
+            Phone Number: %s
+            """
+            , this.getUserID(), this.getName(), this.getPassword(), this.getEmail(), this.getPhoneNumber());
+    }
+
 }

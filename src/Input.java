@@ -9,11 +9,12 @@ public class Input {
 
             if (!scanner.hasNextInt()) {
                 System.out.println("Please enter a number");
-                scanner.next(); //clear buffer
+                scanner.nextLine(); //clear buffer
                 continue;
             }
+            int number = scanner.nextInt();
             scanner.nextLine(); //clear buffer
-            return scanner.nextInt();
+            return number;
         }
     }
 
@@ -41,6 +42,12 @@ public class Input {
         System.out.print(message);
         return scanner.nextLine();
     }
+
+    public static String getStringInput(String message, String defaultString) {
+        System.out.print(message);
+        String result = scanner.nextLine();
+        return (result.isBlank())? defaultString: result;
+    }
     
     public static boolean getBooleanInput(String message, String trueOption, String falseOption) {
         while (true) {
@@ -51,5 +58,22 @@ public class Input {
             else System.out.printf("Not an Option, Please Enter Either %s or %s.\n\n", trueOption, falseOption);
         }
     }
+    
+    public static String getDateInput(String message) {
+        while (true) {
+            String input = Input.getStringInput(message);
+            if (input.isBlank()) return "Not Set";
+            if (input.matches("^\\s*(0?[1-9]|[1-2]\\d|3[0-1])/(0?[1-9]|1[0-2]?)/\\d{4}\\s*$")) return input.trim();
+            else System.out.println("Input does not match date format (DD/MM/YYYY)\n");
+        }
+    }
 
+    public static String getTimeInput(String message) {
+        while (true) {
+            String input = Input.getStringInput(message);
+            if (input.isBlank()) return "Not Set";
+            if (input.matches("^\\s*([0-1]?\\d|2[0-3]):([0-5]?\\d)\\s*$")) return input.trim();
+            else System.out.println("Input does not match time format (HH:MM)\n");
+        }
+    }
 }

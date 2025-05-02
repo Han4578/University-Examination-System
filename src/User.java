@@ -77,8 +77,9 @@ public abstract class User implements Comparable<User> {
     }
 
     public void changeName() {
-        this.setPassword(User.getNameInput("Enter New Name: "));
+        this.setName(User.getNameInput("Enter New Name: "));
         System.out.println("New Name Has Been Set");
+        UserManager.getInstance().save();
     }
 
     public static String getPasswordInput(String message) {
@@ -93,62 +94,62 @@ public abstract class User implements Comparable<User> {
     public void changePassword() {
         this.setPassword(User.getPasswordInput("Enter New Password: "));
         System.out.println("New Password Has Been Set");
+        UserManager.getInstance().save();
     }
 
     public static String getEmailInput(String message) {
         while (true) {
             String email = Input.getStringInput(message);
+            if (email.isBlank()) return "Not Set";
             if (email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) return email;
             System.out.println("Invalid Email Address Format\n");
         }
     }
 
     public void changeEmail() {
-        String email = User.getEmailInput("Enter New Email(Optional, abc123@example.com): ");
-        this.setEmail((email.isBlank())? "Not Set": email);
+        this.setEmail(User.getEmailInput("Enter New Email(Optional, abc123@example.com): "));
         System.out.println("New Email Has Been Set");
+        UserManager.getInstance().save();
     }
 
     public static String getPhoneNumberInput(String message) {
         while (true) {
             String phoneNumber = Input.getStringInput(message);
-            if (phoneNumber.isBlank() || phoneNumber.matches("[0-9]+")) return phoneNumber;
+            if (phoneNumber.isBlank()) return "Not Set";
+            if (phoneNumber.matches("[0-9]+")) return phoneNumber;
             System.out.println("Phone Number Can Only Contain Numbers\n");
         }
     }
 
     public void changePhoneNumber() {
-        String phoneNumber = User.getPhoneNumberInput("Enter New Phone Number(Optional): ");
-        this.setPhoneNumber((phoneNumber.isBlank())? "Not Set": phoneNumber);
+        this.setPhoneNumber(User.getPhoneNumberInput("Enter New Phone Number(Optional): "));
         System.out.println("New Phone Number has been set");
+        UserManager.getInstance().save();
     }
 
     public abstract ReturnState listOptions();
 
-    public abstract void delete();
+    public abstract void onDelete();
 
     public abstract void editProfile();
 
     public abstract void editProfileAsAdmin();
 
-    public abstract void showProfile();
-
+    
     public abstract String[] getParameters();
 
-    @Override
-    public String toString() {
-        return String.join(" ", this.getParameters());
+    public void showProfile() {
+        System.out.println(this);
     }
+
+    @Override
+    public abstract String toString();
 
     @Override
     public boolean equals(Object obj) {
         return obj instanceof User && this.getUserID().equals(((User) obj).getUserID());
     }
 
-    @Override
-    public int hashCode() {
-        return this.getUserID().hashCode();
-    }
 
     @Override
     public int compareTo(User user) {

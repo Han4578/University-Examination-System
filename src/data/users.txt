@@ -1,4 +1,5 @@
-1 1 1
+1 1 2
 A000001|Admin|password|admin@admin.com|0001112222
 E000001|Lim|password|ex@ex.com|0001112222
 S000001|Tan|password|stud@stud.com|0001112222|Diploma in Yapping
+S000002|Bob|Bob|Not Set|Not Set|Not Set

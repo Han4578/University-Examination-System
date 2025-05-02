@@ -1,12 +1,11 @@
 import java.util.Map.Entry;
-import java.util.ArrayList;
 import java.util.TreeMap;
 
 public class Student extends User {
     final public static int NUMBER_OF_PARAMETERS = 6;
     private static int lastID = 0;
     private String programme;
-    TreeMap<SemesterCourse, TreeMap<Exam, Result>> semesterCourses = new TreeMap<>();
+    TreeMap<String, TreeMap<String, SemesterCourse>> semesterCourses = new TreeMap<>();
 
     public Student() {
         this("S000000", "Default Student", "password", "", "", "");
@@ -44,11 +43,11 @@ public class Student extends User {
         String password = User.getPasswordInput("Enter Password: ");
         String email = User.getEmailInput("Enter Email(Optional): ");
         String phoneNumber = User.getPhoneNumberInput("Enter Phone Number(Optional): ");
-        String programme = Input.getStringInput("Enter Programme(Optional): ");
+        String programme = Input.getStringInput("Enter Programme(Optional): ", "Not Set");
         return new Student(String.format("S%06d", ++lastID), name, password, email, phoneNumber, programme);
     }
 
-    public static String marksToGPA(float marks) {
+    public static String marksToGPA(int marks) {
         int roundedMarks = Math.round(marks);
         if (roundedMarks > 100 || roundedMarks < 0) return "Invalid";
 
@@ -97,20 +96,6 @@ public class Student extends User {
         }
     }
 
-    public void showProfile() {
-        System.out.printf(
-        """
-
-        User ID: %s
-        Name: %s
-        Password: %s
-        Programme: %s
-        Email: %s
-        Phone Number: %s\n
-        """
-        , this.getUserID(), this.getName(), this.getPassword(), this.getProgramme(), this.getEmail(), this.getPhoneNumber());
-    }
-
     public void editProfileAsAdmin() {
         while (true) {            
             System.out.printf("\nEdit Profile of Student %s:", this.getUserID());           
@@ -125,11 +110,10 @@ public class Student extends User {
                 6. Enroll Semester Course
                 7. Unenroll Semester Course
                 8. Edit Results
-                9. Save All
-                10. Cancel
+                9. Back
 
                 Your input: \
-                """, 1, 10)) {
+                """, 1, 9)) {
                 case 1:
                     this.changeName();
                     break;
@@ -147,17 +131,17 @@ public class Student extends User {
                     break;               
                 case 6:
                     System.out.println("Enroll Semester Course");
-                    SemesterCourse semesterCourseToEnroll = SemesterManager.selectSemesterCourseFromInput();
+                    SemesterCourse semesterCourseToEnroll = SemesterManager.getInstance().selectSemesterCourseFromInput();
 
                     if (semesterCourseToEnroll == null) break;
-                    if (semesterCourses.containsKey(semesterCourseToEnroll)) {
+                    if (semesterCourses.containsKey(semesterCourseToEnroll.getSemester()) && semesterCourses.get(semesterCourseToEnroll.getSemester()).containsKey(semesterCourseToEnroll.getCourseID())) {
                         System.out.println("Student is Already Enrolled in this Semester Course");
                         break;
                     }
-
-                    semesterCourses.put(semesterCourseToEnroll, new TreeMap<>());
                     semesterCourseToEnroll.addStudent(this);
+                    this.addSemesterCourse(semesterCourseToEnroll);
                     System.out.println("Student Successfully Enrolled in this Semester Course");
+                    semesterCourseToEnroll.save();
                     break;                
                 case 7:
                     System.out.println("Unenroll Semester Course");
@@ -165,25 +149,22 @@ public class Student extends User {
 
                     if (semesterCourseToUnenroll == null) break;
 
-                    semesterCourses.remove(semesterCourseToUnenroll);
                     semesterCourseToUnenroll.removeStudent(this);
+                    this.removeSemesterCourse(semesterCourseToUnenroll);
                     System.out.println("Student Successfully Unenrolled in this Semester Course");
+                    semesterCourseToUnenroll.save();    
                     break;                
                 case 8:
                     SemesterCourse semesterCourseToEdit = this.selectSemesterCourseFromInput();
+                    if (semesterCourseToEdit == null) break;
                     Exam examToEdit = semesterCourseToEdit.selectExamFromInput();         
-                    
-                    Result result = this.semesterCourses.get(semesterCourseToEdit).get(examToEdit);
-
-                    int newMarks = Input.getIntInput(String.format("Current Mark: %d\nEnter New Marks(Enter -1 to Cancel):", result.getMarksObtained()), -1, examToEdit.getTotalMarks());
+                    if (examToEdit == null) break;
+                    int newMarks = Input.getIntInput(String.format("Current Marks: %d\nEnter New Marks(Enter -1 to Back):", examToEdit.getStudentMarks(this)), -1, examToEdit.getTotalMarks());
                     if (newMarks == -1) break;
 
-                    result.setMarksObtained(newMarks);
+                    examToEdit.setMarksObtained(this, newMarks);
                     System.out.println("Results Successfully Changed");
                 case 9:
-                    UniversityManager.saveAll();
-                    break;                
-                case 10:
                     return;                
                 default:
                     break;
@@ -202,11 +183,10 @@ public class Student extends User {
                     2. Change Email
                     3. Change Phone Number
                     4. Show Profile
-                    5. Save
-                    6. Cancel
+                    5. Back
 
                     Your input: \
-                    """, 1, 6
+                    """, 1, 5
                 )
             ) {
                 case 1:
@@ -222,9 +202,6 @@ public class Student extends User {
                     this.showProfile();
                     break;                
                 case 5:
-                    UserManager.getInstance().save();
-                    break;               
-                case 6:
                     return;                
                 default:
                     break;
@@ -236,60 +213,66 @@ public class Student extends User {
         float totalGradePoint = 0;
         int totalCreditHour = 0;
 
-        for (Entry<SemesterCourse, TreeMap<Exam, Result>> entry: semesterCourses.entrySet()) {
-            float convertedMarks = 0;
-
-            for (Entry<Exam, Result> result: entry.getValue().entrySet()) {
-                //Formula: Total Contribution Marks * Marks Obtained / Total Exam Marks
-                convertedMarks += result.getKey().getContributionPercentage() * result.getValue().getMarksObtained() / result.getKey().getTotalMarks();
+        for (Entry<String, TreeMap<String, SemesterCourse>> entry: this.semesterCourses.entrySet()) {
+            System.err.println(entry.getKey() + " Results");
+            for (SemesterCourse semesterCourse: entry.getValue().values()) {
+                int convertedMarks = semesterCourse.getStudentMarks(this);
+                String grade = Student.marksToGPA(convertedMarks);
+                int creditHour = semesterCourse.getCreditHour();
+    
+                totalCreditHour += creditHour;
+                switch (grade) {
+                    case "A+":
+                    case "A":
+                        totalGradePoint += 4.0f * creditHour;
+                        break;
+                    case "A-":
+                        totalGradePoint += 3.67f * creditHour;
+                        break;
+                    case "B+":
+                        totalGradePoint += 3.33f * creditHour;
+                        break;
+                    case "B":
+                        totalGradePoint += 3.00f * creditHour;
+                        break;
+                    case "B-":
+                        totalGradePoint += 2.67f * creditHour;
+                        break;
+                    case "C+":
+                        totalGradePoint += 2.33f * creditHour;
+                        break;
+                    case "C":
+                        totalGradePoint += 3.0f * creditHour;
+                        break;
+                    case "F":
+                    case "Invalid":
+                    default:
+                        break;
+                }
+    
+                System.out.printf("%s\t%s\n", semesterCourse.getCourse().getCourseTitle(), grade);
             }
-
-            String grade = Student.marksToGPA(convertedMarks);
-            int creditHour = entry.getKey().getCreditHour();
-
-            totalCreditHour += creditHour;
-            switch (grade) {
-                case "A+":
-                case "A":
-                    totalGradePoint += 4.0f * creditHour;
-                    break;
-                case "A-":
-                    totalGradePoint += 3.67f * creditHour;
-                    break;
-                case "B+":
-                    totalGradePoint += 3.33f * creditHour;
-                    break;
-                case "B":
-                    totalGradePoint += 3.00f * creditHour;
-                    break;
-                case "B-":
-                    totalGradePoint += 2.67f * creditHour;
-                    break;
-                case "C+":
-                    totalGradePoint += 2.33f * creditHour;
-                    break;
-                case "C":
-                    totalGradePoint += 3.0f * creditHour;
-                    break;
-                case "F":
-                default:
-                    break;
-            }
-
-            System.out.printf("%d\t%s\t%s\n", entry.getKey().getSemester(), entry.getKey().getCourseTitle(), grade);
         }
+
         System.out.printf("\nCGPA: %.02f\n", (totalCreditHour == 0)? 0: totalGradePoint / totalCreditHour);
     }
 
     public SemesterCourse selectSemesterCourseFromInput() {
-        ArrayList<SemesterCourse> semesterCourseList = new ArrayList<>(semesterCourses.keySet());
-        int num = 0;
-        for (SemesterCourse semesterCourse: semesterCourseList) {
-            System.out.printf("%d. %d\t%s\n", ++num, semesterCourse.getSemester(), semesterCourse.getCourseTitle());
+        System.out.println(String.join("\n", this.semesterCourses.keySet()));
+        String semester = Input.getStringInput("\nEnter Semester: ");
+        if (!this.semesterCourses.containsKey(semester)) {
+            System.out.println("The Student Does Not Have Semester Courses in This Semester");
+            return null;
+        }
+        System.out.println(semester + " Enrolled Courses");
+        for(String courseID: this.semesterCourses.get(semester).keySet()){
+            System.out.println(CourseManager.getInstance().getCourseByID(courseID));
         }
 
-        int input = Input.getIntInput(String.format("Enter Number to Select Semester Course, Enter 0 to Cancel. [0 - %d]\nYour number: ", num), 0, num);
-        return (input == 0)? null: semesterCourseList.get(input - 1);
+        String courseID = Input.getStringInput("Enter Enrolled Course ID: ");
+        if (this.semesterCourses.get(semester).containsKey(courseID)) return this.semesterCourses.get(semester).get(courseID);
+        System.out.println("Course Not Found in This Semester");
+        return null;
     }
 
     public static String getParameterTitle() {
@@ -301,10 +284,35 @@ public class Student extends User {
         return new String[]{this.getUserID(), this.getName(), this.getPassword(), this.getEmail(), this.getPhoneNumber(), this.getProgramme()};
     }
 
-    public void delete() {
-        for (Entry<SemesterCourse, TreeMap<Exam, Result>> entry: semesterCourses.entrySet()) {
-            entry.getKey().removeStudent(this);
-            for (Entry<Exam, Result> resultEntry: entry.getValue().entrySet()) resultEntry.getValue().delete(this);
+    public void onDelete() {
+        for (TreeMap<String, SemesterCourse> set: this.semesterCourses.values()) {
+            for (SemesterCourse semesterCourse: set.values()) {
+                semesterCourse.removeStudent(this);
+                semesterCourse.save();
+            }
         }
+    }
+
+    public void addSemesterCourse(SemesterCourse semesterCourse) {
+        this.semesterCourses.computeIfAbsent(semesterCourse.getSemester(), k -> new TreeMap<>()).put(semesterCourse.getCourseID(), semesterCourse);
+    }
+
+    public void removeSemesterCourse(SemesterCourse semesterCourse) {
+        this.semesterCourses.get(semesterCourse.getSemester()).remove(semesterCourse.getCourseID());
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+            """
+    
+            User ID: %s
+            Name: %s
+            Password: %s
+            Programme: %s
+            Email: %s
+            Phone Number: %s
+            """
+            , this.getUserID(), this.getName(), this.getPassword(), this.getProgramme(), this.getEmail(), this.getPhoneNumber());
     }
 }

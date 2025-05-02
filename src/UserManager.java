@@ -3,14 +3,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.TreeMap;
 
 public class UserManager {
     final public static String DELIMITER = "|";
     final public static String ESCAPED_DELIMITER = "\\|";
     private static UserManager instance = new UserManager();
-    private UserList<Admin> admins = new UserList<>(UserList.userCategories.ADMIN);
-    private UserList<Student> students = new UserList<>(UserList.userCategories.STUDENT);
-    private UserList<Examiner> examiners = new UserList<>(UserList.userCategories.EXAMINER);
+    enum userCategories {ADMIN, EXAMINER, STUDENT}
+    private TreeMap<String, Admin> admins = new TreeMap<>();
+    private TreeMap<String, Student> students = new TreeMap<>();
+    private TreeMap<String, Examiner> examiners = new TreeMap<>();
 
     private UserManager() {
         
@@ -30,24 +32,106 @@ public class UserManager {
                     1. Manage Students
                     2. Mangage Examiners
                     3. Manage Admin
-                    4. Save
-                    5. Cancel
+                    4. Back
 
                     Your Input: \
-                    """, 1, 5
+                    """, 1, 4
                 )
             ) {
                 case 1:
-                    students.manage();
+                    this.manageList(students, userCategories.STUDENT);
                     break;
                 case 2:
-                    examiners.manage();
+                    this.manageList(examiners, userCategories.EXAMINER);
                     break;
                 case 3:
-                    admins.manage();
+                    this.manageList(admins, userCategories.ADMIN);
                     break;
                 case 4:
-                    this.save();
+                    return;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public <T extends User> void manageList(TreeMap<String, ? extends User> userList, userCategories category) {
+        String displayCategory = category.toString().substring(0, 1).toUpperCase() + category.toString().substring(1).toLowerCase();
+
+        while (true) {
+            switch (
+                Input.getIntInput(String.format(
+                    """
+
+                    Manage %1$s
+                    1. Create %1$s
+                    2. Delete %1$s
+                    3. Show %1$s List
+                    4. Edit %1$s
+                    5. Back
+
+                    Your Input: \
+                    """, 
+                    displayCategory), 1, 5)) {
+                case 1:
+                    switch (category) {
+                        case ADMIN:
+                            this.addUser(admins, Admin.createFromInput());
+                            System.out.println("Admin Created");
+                            this.save();
+                            break;
+                            case EXAMINER:
+                            this.addUser(examiners, Examiner.createFromInput());
+                            System.out.println("Examiner Created");
+                            this.save();
+                            break;
+                            case STUDENT:
+                            this.addUser(students, Student.createFromInput());
+                            System.out.println("Student Created");
+                            this.save();
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 2:
+                    String userIDtoRemove = Input.getStringInput(String.format("Enter %s ID to Remove: ", displayCategory));
+                    if (userList.containsKey(userIDtoRemove)) {
+                    if (!Input.getBooleanInput(String.format("Are You Sure You Want to Delete %s? (User ID: %s) [Y/N]: ", this.getUserByID(userIDtoRemove).getName(), userIDtoRemove), "Y", "N")) break;
+                        this.deleteUser(userIDtoRemove);
+                        System.out.printf("%s ID %s Deleted Successfully\n", displayCategory, userIDtoRemove);
+                        this.save();
+                    }
+                    else System.out.printf("%s ID %s Not Found", displayCategory, userIDtoRemove);
+                    break;
+                case 3:
+                    switch (category) {
+                        case ADMIN:
+                            System.out.println(Admin.getParameterTitle());
+                            break;
+                        case STUDENT:
+                            System.out.println(Student.getParameterTitle());
+                            break;
+                        case EXAMINER:
+                            System.out.println(Examiner.getParameterTitle());
+                            break;
+                        default:
+                            break;
+                    }
+
+                    for (User user: userList.values()) {
+                        for (String param: user.getParameters()) {
+                            System.out.printf("%-21s", param);
+                        }
+                        System.out.println("\n");
+                    }
+                    break;
+                case 4:
+                    String userIDtoEdit = Input.getStringInput(String.format("Enter %s ID to Edit: ", displayCategory));
+                    if (userList.containsKey(userIDtoEdit)) {
+                        this.getUserByID(userIDtoEdit).editProfileAsAdmin();
+                    }
+                    else System.out.printf("%s ID %s Not Found", displayCategory, userIDtoEdit);
                     break;
                 case 5:
                     return;
@@ -56,6 +140,7 @@ public class UserManager {
             }
         }
     }
+
 
     public void load() {
         try {
@@ -69,8 +154,7 @@ public class UserManager {
             System.exit(1);
             }
     
-            BufferedReader reader;
-            reader = new BufferedReader(new FileReader(file));
+            BufferedReader reader = new BufferedReader(new FileReader(file));
             String line = reader.readLine();
             
             if (line == null) line = "0 0 0"; //If file is empty, default lastID to 0
@@ -82,7 +166,7 @@ public class UserManager {
                 Examiner.setLastID(Integer.valueOf(lastIDs[1]));
                 Student.setLastID(Integer.valueOf(lastIDs[2]));
             } catch (NumberFormatException e) {
-                System.out.println("Not a Number, Last ID Could Not be Assigned");
+                System.out.println("Not a Number, User Last ID Could Not be Assigned, Aborting");
                 System.exit(1);
             }
             
@@ -92,15 +176,15 @@ public class UserManager {
     
                 switch (params[0].charAt(0)) {
                     case 'A':
-                        if (params.length == Admin.NUMBER_OF_PARAMETERS) admins.addUser(new Admin(params));
+                        if (params.length == Admin.NUMBER_OF_PARAMETERS) this.addUser(admins, new Admin(params));
                         else System.out.printf("Invalid Format, Make Sure There Are %d Parameters: %s\n", Admin.NUMBER_OF_PARAMETERS, line);
                         break;
                     case 'E':
-                        if (params.length == Examiner.NUMBER_OF_PARAMETERS) examiners.addUser(new Examiner(params));
+                        if (params.length == Examiner.NUMBER_OF_PARAMETERS) this.addUser(examiners, new Examiner(params));
                         else System.out.printf("Invalid Format, Make Sure There Are %d Parameters: %s\n", Examiner.NUMBER_OF_PARAMETERS, line);
                         break;
                     case 'S':
-                        if (params.length == Student.NUMBER_OF_PARAMETERS) students.addUser(new Student(params));
+                        if (params.length == Student.NUMBER_OF_PARAMETERS) this.addUser(students, new Student(params));
                         else System.out.printf("Invalid Format, Make Sure There Are %d Parameters: %s\n", Student.NUMBER_OF_PARAMETERS, line);
                         break;
                     default:
@@ -110,6 +194,7 @@ public class UserManager {
             }
     
             reader.close();
+            System.out.println("Users Loaded From File");
         } catch (IOException e) {
             System.out.println("User File Could Not Be Opened and Read");
             e.printStackTrace();
@@ -123,6 +208,8 @@ public class UserManager {
             File actual = new File("src/data/users.txt");
             File backup = new File("src/data/users.backup");
 
+            actual.createNewFile();
+
             //Back Up File Before Changing
             backup.delete();
             if (!actual.renameTo(backup)) throw new IOException("User File Could Not Be Backed Up, Aborting Save");
@@ -132,9 +219,18 @@ public class UserManager {
 
             fileWriter.write(String.format("%d %d %d", Admin.getLastID(), Examiner.getLastID(), Student.getLastID()));
 
-            admins.save(fileWriter);
-            examiners.save(fileWriter);
-            students.save(fileWriter);
+            for (Admin admin: admins.values()) {
+                fileWriter.write("\n");
+                fileWriter.write(String.join(UserManager.DELIMITER, admin.getParameters()));
+            }
+            for (Examiner examiner: examiners.values()) {
+                fileWriter.write("\n");
+                fileWriter.write(String.join(UserManager.DELIMITER, examiner.getParameters()));
+            }
+            for (Student student: students.values()) {
+                fileWriter.write("\n");
+                fileWriter.write(String.join(UserManager.DELIMITER, student.getParameters()));
+            }
 
             fileWriter.close();
             //Rename Temp File to Actual File
@@ -144,7 +240,7 @@ public class UserManager {
             }
             else {
                 if (backup.renameTo(actual)) System.out.println("User File Could Not Be Saved, Previous Version is Restored.");
-                throw new IOException("User File Could Not Be Saved, Previous Version is Restored, Previous Version is Saved in a Backup File but Could Not Be Restored.");
+                throw new IOException("User File Could Not Be Saved, Previous Version is Saved in a Backup File but Could Not Be Restored.");
             };
 
         } catch (IOException e) {
@@ -155,45 +251,51 @@ public class UserManager {
     }
     
     public User getUserByID(String userID) {
-        switch (userID.charAt(0)) {
-            case 'A':
-                if (admins.userExists(userID)) return admins.getUserByID(userID);
-                break;
-            case 'S':
-                if (students.userExists(userID)) return students.getUserByID(userID);
-                break;
-            case 'E':
-                if (examiners.userExists(userID)) return examiners.getUserByID(userID);
-                break;
-            default:
-                break;
+        if (!userID.isBlank()) {
+            switch (userID.charAt(0)) {
+                case 'A':
+                    if (admins.containsKey(userID)) return admins.get(userID);
+                    break;
+                case 'S':
+                    if (students.containsKey(userID)) return students.get(userID);
+                    break;
+                case 'E':
+                    if (examiners.containsKey(userID)) return examiners.get(userID);
+                    break;
+                default:
+                    break;
+            }
         }
         
         System.out.println("User Not Found");
         return null;
     }
 
-    public User selectUserFromInput() {
-        return this.getUserByID(Input.getStringInput("Enter User ID: "));
+    public User selectUserFromInput(String message) {
+        return this.getUserByID(Input.getStringInput(message));
+    }
+
+    public <T extends User> void addUser(TreeMap<String, T> userList, T user) {
+        userList.put(user.getUserID(), user);
     }
     
     public void deleteUser(String userID) {
         switch (userID.charAt(0)) {
             case 'A':
-                if (!admins.userExists(userID)) break;
-                admins.removeUser(userID);
+                if (!admins.containsKey(userID)) break;
                 System.out.println("Admin Successfully Deleted.");
-                return;    
+                admins.remove(userID).onDelete();
+                return;
             case 'S':
-                if (students.userExists(userID)) break;
-                students.removeUser(userID);
+                if (!students.containsKey(userID)) break;
                 System.out.println("Student Successfully Deleted.");
-                return;    
+                students.remove(userID).onDelete();
+                return;
             case 'E':
-                if (examiners.userExists(userID)) break;
-                examiners.removeUser(userID);
+                if (!examiners.containsKey(userID)) break;
                 System.out.println("Examiner Successfully Deleted.");
-                return;    
+                examiners.remove(userID).onDelete();
+                return;
             default:
                 break;
         }

@@ -1,6 +1,6 @@
 public class Admin extends User {
-    private static int lastID = 0;
     final public static int NUMBER_OF_PARAMETERS = 5;
+    private static int lastID = 0;
 
     public Admin() {
         this("S000000", "Default Admin", "password", "", "");
@@ -44,12 +44,11 @@ public class Admin extends User {
                     3. Manage Users
                     4. Manage Courses
                     5. Manage Semesters
-                    6. Save All
-                    7. Log Out
-                    8. Quit
+                    6. Log Out
+                    7. Quit
 
                     Your Input: \
-                    """, 1, 8
+                    """, 1, 7
                 )
             ) {
                 case 1:
@@ -68,30 +67,14 @@ public class Admin extends User {
                     SemesterManager.getInstance().manage();
                     break;
                 case 6:
-                    UniversityManager.saveAll();
-                    break;
-                case 7:
                     System.out.println("\nLog Out Success!");
                     return User.ReturnState.LOG_OUT;
-                case 8:
+                case 7:
                     return User.ReturnState.EXIT;            
                 default:
                     break;
             }
         }
-    }
-
-    public void showProfile() {
-        System.out.printf(
-        """
-
-        User ID: %s
-        Name: %s
-        Password: %s
-        Email: %s
-        Phone Number: %s\n
-        """
-        , this.getUserID(), this.getName(), this.getPassword(), this.getEmail(), this.getPhoneNumber());
     }
 
     public void editProfileAsAdmin() {
@@ -108,11 +91,10 @@ public class Admin extends User {
                     4. Change Phone Number
                     5. Show Profile
                     6. Delete User
-                    7. Save
-                    8. Cancel
+                    7. Back
 
                     Your input: \
-                    """, 1, 8
+                    """, 1, 7
                 )
             ) {
                 case 1:
@@ -135,9 +117,6 @@ public class Admin extends User {
                     else this.delete();
                     break;            
                 case 7:
-                    UserManager.getInstance().save();
-                    break;                
-                case 8:
                     return;                
                 default:
                     break;
@@ -161,4 +140,23 @@ public class Admin extends User {
         if (!Input.getBooleanInput(String.format("Are You Sure You Want to Delete %s? (User ID: %s) [Y/N]: ", this.getName(), this.getUserID()), "Y", "N")) return;
         UserManager.getInstance().deleteUser(this.getUserID());
     }
+
+    public void onDelete() {
+
+    }
+
+    @Override
+    public String toString() {
+        return String.format("""
+
+        User ID: %s
+        Name: %s
+        Password: %s
+        Email: %s
+        Phone Number: %s
+        """
+        , this.getUserID(), this.getName(), this.getPassword(), this.getEmail(), this.getPhoneNumber());
+    }
+
+
 }
