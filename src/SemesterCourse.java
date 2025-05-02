@@ -145,8 +145,6 @@ class SemesterCourse implements Comparable<SemesterCourse> {
                     Exam examInput = this.selectExamFromInput();
                     if(examInput != null){
                         this.removeExam(examInput);
-                        System.out.println("Exam sucessfully removed");
-                        this.save();
                     } else System.out.println("Exam not found");
                     break;
                 case 3:
@@ -295,7 +293,7 @@ class SemesterCourse implements Comparable<SemesterCourse> {
                 throw new IOException(String.format("Senester Course %s %s File Could Not Be Saved, Previous Version is Saved in a Backup File but Could Not Be Restored.", this.semester, this.getCourseID()));
             };
         } catch (IOException e) {
-            System.out.printf("Semester Course %s %s Could Not Be Saved", this.semester, this.getCourseID());
+            System.out.printf("Semester Course %s %s Could Not Be Saved: %s", this.semester, this.getCourseID(), e.getMessage());
         }
     }
 
@@ -319,11 +317,11 @@ class SemesterCourse implements Comparable<SemesterCourse> {
         int totalContribution = 0; //Must be 100 for result to be valid
         for (Exam exam: this.exams.values()) {
             if (exam.getStudentMarks(student) == -1) return -1;//-1 Means unassigned, no marks, so result invalid
-            totalMarks += (float) exam.getOverallPercentage() * exam.getStudentMarks(student) / exam.getTotalMarks();
+            totalMarks += (float) exam.getStudentMarks(student) / exam.getTotalMarks();
             totalContribution += exam.getOverallPercentage();
         }
         if (totalContribution != 100) return -1;
-        else return Math.round(totalMarks / 100);
+        else return Math.round(totalMarks * 100);
     }
 
     public String getCourseID() {
@@ -335,7 +333,10 @@ class SemesterCourse implements Comparable<SemesterCourse> {
     }
     
     public void removeExam(Exam exam) {
+        if (!Input.getBooleanInput(String.format("Are You Sure You Want to Remove Exam %s? [Y/N]: ", exam.getExamID()), "Y", "N")) return;
     	this.exams.remove(exam.getExamID()).onDelete();
+        System.out.println("Exam sucessfully removed");
+        this.save();
     }
 
     public Exam selectExamFromInput(){

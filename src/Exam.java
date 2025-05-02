@@ -35,7 +35,8 @@ class Exam implements Comparable<Exam> {
             bufferedWriter.write(String.valueOf(Exam.totalID));
             bufferedWriter.close();
         } catch (IOException e) {
-            System.out.println("Last Exam ID Could Not Be Saved");
+            System.out.println("Last Exam ID Could Not Be Saved: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -126,40 +127,33 @@ class Exam implements Comparable<Exam> {
         do {
             System.out.println(this.getResultsString());
             User userInput = (User) UserManager.getInstance().selectUserFromInput("Enter Student ID: ");
-            if(userInput != null){
-                if(userInput instanceof Student){
-                    Student studentInput = (Student) userInput;
-                    if(this.results.get(studentInput) != null){
-                        this.editResult(studentInput,Input.getIntInput("Enter Marks Obtained (0-100, -1 to Leave Blank): ", -1, 100));
-                        System.out.println("Results Successfully Changed");
-                        this.semesterCourse.save();	
-                    }else{
-                        System.out.println("No Student Found");
-                    }
-                }else{
-                    System.out.println("User is Not a Student");
+            if(userInput == null) continue;
+            if(!(userInput instanceof Student)) System.out.println("User is Not a Student");
+            else {
+                Student studentInput = (Student) userInput;
+                if (!this.results.containsKey(studentInput)) System.out.println("No Student Found");
+                else {
+                    this.setMarksObtained(studentInput,Input.getIntInput("Enter Marks Obtained (0-100, -1 to Leave Blank): ", -1, 100));
+                    System.out.println("Results Successfully Changed");
+                    this.semesterCourse.save();	
                 }
             }
         } while (Input.getBooleanInput("Continue Grading? [Y/N]: ", "Y", "N"));
 	}
-
-    void editResult(Student student,int marks){
-  		this.results.put(student,marks);
-  	}
   
-    void addExaminer(Examiner examiner) {
+    public void addExaminer(Examiner examiner) {
     	this.examiners.add(examiner);
     }
     
-    void removeExaminer(Examiner examiner) {
+    public void removeExaminer(Examiner examiner) {
         this.examiners.remove(examiner);
     }
 
-    void addStudent(Student student) {
+    public void addStudent(Student student) {
         this.results.put(student, -1);
     }
 
-    void removeStudent(Student student) {
+    public void removeStudent(Student student) {
         this.results.remove(student);
     }
 
@@ -172,6 +166,7 @@ class Exam implements Comparable<Exam> {
             if (line != null) Exam.totalID = Integer.valueOf(line);
             bufferedReader.close();
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Exam ID Could Not Be Loaded. Aborting...");
             System.exit(1);
         }
@@ -214,7 +209,7 @@ class Exam implements Comparable<Exam> {
         );
     }
     
-    String getExaminersString(){
+    public String getExaminersString(){
     	StringBuilder allExaminers = new StringBuilder("Examiners\n----------\n");
         if (this.examiners.size() > 0) {
             for (Examiner examiner : this.examiners) {
@@ -224,7 +219,7 @@ class Exam implements Comparable<Exam> {
 		return allExaminers.toString();
     }
     
-    String getResultsString(){
+    public String getResultsString(){
     	StringBuilder allResults = new StringBuilder("Results\n----------\n");
         if (this.results.size() > 0) {
             for (Entry<Student, Integer> entry : this.results.entrySet()) {
@@ -261,6 +256,6 @@ class Exam implements Comparable<Exam> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Exam && this.examID.equals(((Exam)obj).getExamID());
+        return obj instanceof Exam && this.compareTo((Exam) obj) == 0;
     }
 }

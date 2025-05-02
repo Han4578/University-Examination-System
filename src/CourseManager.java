@@ -21,7 +21,17 @@ public class CourseManager{
 
     public void manage(){
         while (true){
-            switch (Input.getIntInput("\n----------Manage Courses---------- \n1. Add new course \n2. Edit course \n3. Show couses \n4. Remove courses \n5. Back\n\nYour Input(1-5): ", 1, 5)) {
+            switch (Input.getIntInput(
+            """
+            ----------Manage Courses---------- 
+            1. Add new course 
+            2. Edit course 
+            3. Show couses 
+            4. Remove course
+            5. Back
+            
+            Your Input: \
+            """, 1, 5)) {
                 case 1:
                     addCourse(inputCourse());
                     break;
@@ -33,7 +43,6 @@ public class CourseManager{
                     break;
                 case 4:
                     removeCourse();
-                    System.out.println("Course removed successfully");
                     break;
                 case 5:
                     return;
@@ -71,19 +80,19 @@ public class CourseManager{
     }
     
     private Course inputCourse(){
-        String cID = Input.getStringInput("Enter Course ID: ");
-        if (this.courses.containsKey(cID)) {
-            System.out.println("Course with ID " + cID + " already exists!");
+        String courseID = Input.getStringInput("Enter Course ID: ");
+        if (this.courses.containsKey(courseID)) {
+            System.out.println("Course with ID " + courseID + " already exists!");
             return null;
         }
-        if (cID.isBlank()) {
+        if (courseID.isBlank()) {
             System.out.println("Course ID cannot be blank");
             return null;
         }
-        String cName = this.inputCourseName("Enter Course Name: ");
-        int cCreditHour = Input.getIntInput("Enter Course Credit Hours: ", 1, Integer.MAX_VALUE);
+        String courseName = this.inputCourseName("Enter Course Name: ");
+        int courseCreditHour = Input.getIntInput("Enter Course Credit Hours: ", 1, Integer.MAX_VALUE);
 
-        return new Course(cID, cName, cCreditHour);
+        return new Course(courseID, courseName, courseCreditHour);
     }
 
     //option 2: edit TreeMap courses data(course name and credit hours)
@@ -115,16 +124,16 @@ public class CourseManager{
                         System.out.println("----------Latest course info----------\nCourse Name: " + course.getCourseName() + " - Credit Hours: " + course.getCreditHour());
                         return;
                     default:
-                        System.out.println("Invalid input! Please enter again!");
+                        System.out.println("Invalid input! Please Enter Again!");
                         break;
                     }
                 if (updated) {
-                    System.out.println("Course Updated Successfully!");
                     save();
+                    System.out.println("Course Updated Successfully!");
                 }
             }
         }else{
-            System.out.println("Course ID not found!");
+            System.out.println("Course ID Not Found!");
         }
     }
     
@@ -152,17 +161,14 @@ public class CourseManager{
     private void removeCourse(){
         String ID = Input.getStringInput("Enter Course ID: ");
         Course course = courses.get(ID);
-        deleteCourse(course);
-    }
 
-    public void deleteCourse(Course course){
         if (course != null && courses.containsKey(course.getCourseID())){
+            if (!Input.getBooleanInput(String.format("Are Your Sure You Want to Remove Course %s? [Y/N]: ", course.getCourseTitle()), "Y", "N")) return;
             courses.remove(course.getCourseID());
-            System.out.println("Course Removed: " + course.getCourseID());
+            System.out.println("Course Removed Successfully: " + course.getCourseID());
             save();
-        }else{
-            System.out.println("Course not exist!\n");
-        }
+        } else System.out.println("Course Does Not Exist!\n");
+        
     }
 
     // save the TreeMap to course.txt file
@@ -179,6 +185,7 @@ public class CourseManager{
             System.out.println("All courses saved to file...");
         } catch (IOException e) {
             System.out.println("Error writing to file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -216,6 +223,7 @@ public class CourseManager{
             reader.close();
         } catch (IOException e) {
             System.out.println("Error reading from file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

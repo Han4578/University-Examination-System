@@ -6,7 +6,6 @@ public abstract class User implements Comparable<User> {
     private String email;
     private String phoneNumber;
     
-    
     public User() {
         this("U000000", "Default", "12345", "", "");
     }
@@ -43,16 +42,13 @@ public abstract class User implements Comparable<User> {
         return this.password;
     }
 
-
     public void setPassword(String password) {
         this.password = password;
     }
 
-
     public String getEmail() {
         return this.email;
     }
-
 
     public void setEmail(String email) {
         this.email = email;
@@ -61,7 +57,6 @@ public abstract class User implements Comparable<User> {
     public String getPhoneNumber() {
         return this.phoneNumber;
     }
-
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
@@ -135,7 +130,6 @@ public abstract class User implements Comparable<User> {
 
     public abstract void editProfileAsAdmin();
 
-    
     public abstract String[] getParameters();
 
     public void showProfile() {
@@ -147,9 +141,8 @@ public abstract class User implements Comparable<User> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof User && this.getUserID().equals(((User) obj).getUserID());
+        return obj instanceof User && this.compareTo((User) obj) == 0;
     }
-
 
     @Override
     public int compareTo(User user) {

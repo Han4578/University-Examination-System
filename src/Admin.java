@@ -3,7 +3,7 @@ public class Admin extends User {
     private static int lastID = 0;
 
     public Admin() {
-        this("S000000", "Default Admin", "password", "", "");
+        this("A000000", "Default Admin", "password", "Not Set", "Not Set");
     }
 
     public Admin(String userID, String name, String password, String email, String phoneNumber) {

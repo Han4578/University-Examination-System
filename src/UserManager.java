@@ -149,15 +149,26 @@ public class UserManager {
             try {
                 file.createNewFile(); //create file if it doesnt exist
             } catch (IOException e) {
+                e.printStackTrace();
             System.out.println("File could not be created");
-            e.printStackTrace();
             System.exit(1);
             }
     
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line = reader.readLine();
             
-            if (line == null) line = "0 0 0"; //If file is empty, default lastID to 0
+            if (line == null) {
+                line = "0 0 0";//If file is empty, default lastID to 0
+                System.out.println(
+                    """
+                    User File Not Found. A Default Admin Account Has Been Created, Details:
+                    User ID: A000000
+                    Password: password
+
+                    Please Use the Account Above to Log In
+                    """);
+                this.addUser(admins, new Admin());
+            } 
 
             String[] lastIDs = line.split(" +");
             
@@ -196,8 +207,8 @@ public class UserManager {
             reader.close();
             System.out.println("Users Loaded From File");
         } catch (IOException e) {
-            System.out.println("User File Could Not Be Opened and Read");
             e.printStackTrace();
+            System.out.println("User File Could Not Be Opened and Read");
             System.exit(1);
         }
     }
@@ -244,8 +255,8 @@ public class UserManager {
             };
 
         } catch (IOException e) {
-            System.out.println("User File Could Not Be Saved");
             e.printStackTrace();
+            System.out.println("User File Could Not Be Saved");
             System.exit(1);
         }
     }

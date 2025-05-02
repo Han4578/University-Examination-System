@@ -6,7 +6,7 @@ public class Examiner extends User {
     TreeMap<String, Exam> assignedExams = new TreeMap<>();
 
     public Examiner() {
-        this("S000000", "Default Examiner", "password", "", "");
+        this("E000000", "Default Examiner", "password", "", "");
     }
 
     public Examiner(String userID, String name, String password, String email, String phoneNumber) {

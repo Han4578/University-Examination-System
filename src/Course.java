@@ -35,8 +35,6 @@ public class Course implements Comparable<Course> {
         return this.courseID + " - " + this.courseName;
     }
 
-
-
     //setter
     public void setCourseID(String courseID){
         this.courseID = courseID;
@@ -72,7 +70,7 @@ public class Course implements Comparable<Course> {
     
     @Override
     public String toString() {
-        return this.getCourseTitle() + " (" + creditHour + " credits)";
+        return this.getCourseTitle() + " (" + creditHour + " Credits)";
     }
 }
 

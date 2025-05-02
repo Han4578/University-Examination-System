@@ -156,6 +156,7 @@ public class SemesterManager {
             }
             System.out.println("Semester Courses Loaded From File");
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Semester Course Files Could Not Be Loaded. Aborting...");
             System.exit(1);
         }

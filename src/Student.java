@@ -109,11 +109,12 @@ public class Student extends User {
                 5. Show Profile
                 6. Enroll Semester Course
                 7. Unenroll Semester Course
-                8. Edit Results
-                9. Back
+                8. Show Results
+                9. Edit Results
+               10. Back
 
                 Your input: \
-                """, 1, 9)) {
+                """, 1, 10)) {
                 case 1:
                     this.changeName();
                     break;
@@ -155,16 +156,20 @@ public class Student extends User {
                     semesterCourseToUnenroll.save();    
                     break;                
                 case 8:
+                    this.showExamResults();
+                    break;
+                case 9:
                     SemesterCourse semesterCourseToEdit = this.selectSemesterCourseFromInput();
                     if (semesterCourseToEdit == null) break;
                     Exam examToEdit = semesterCourseToEdit.selectExamFromInput();         
                     if (examToEdit == null) break;
-                    int newMarks = Input.getIntInput(String.format("Current Marks: %d\nEnter New Marks(Enter -1 to Back):", examToEdit.getStudentMarks(this)), -1, examToEdit.getTotalMarks());
-                    if (newMarks == -1) break;
+                    int newMarks = Input.getIntInput(String.format("Current Marks: %d\nEnter New Marks (Enter -1 to Set As 'Not Set'): ", examToEdit.getStudentMarks(this)), -1, examToEdit.getTotalMarks());
 
                     examToEdit.setMarksObtained(this, newMarks);
                     System.out.println("Results Successfully Changed");
-                case 9:
+                    examToEdit.getSemesterCourse().save();
+                    break;
+                case 10:
                     return;                
                 default:
                     break;
