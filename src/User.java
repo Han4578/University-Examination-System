@@ -121,6 +121,11 @@ public abstract class User implements Comparable<User> {
         System.out.println("New Phone Number has been set");
         UserManager.getInstance().save();
     }
+    
+    public void delete() {
+        if (!Input.getBooleanInput(String.format("Are You Sure You Want to Delete %s? (User ID: %s) [Y/N]: ", this.getName(), this.getUserID()), "Y", "N")) return;
+        UserManager.getInstance().deleteUser(this.getUserID());
+    }
 
     public abstract ReturnState listOptions();
 

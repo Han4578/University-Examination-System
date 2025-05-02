@@ -111,10 +111,11 @@ public class Student extends User {
                 7. Unenroll Semester Course
                 8. Show Results
                 9. Edit Results
-               10. Back
+               10. Delete Student
+               11. Back
 
                 Your input: \
-                """, 1, 10)) {
+                """, 1, 11)) {
                 case 1:
                     this.changeName();
                     break;
@@ -170,6 +171,9 @@ public class Student extends User {
                     examToEdit.getSemesterCourse().save();
                     break;
                 case 10:
+                    this.delete();
+                    break;
+                case 11:
                     return;                
                 default:
                     break;

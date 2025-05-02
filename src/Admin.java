@@ -136,10 +136,6 @@ public class Admin extends User {
         return new String[]{this.getUserID(), this.getName(), this.getPassword(), this.getEmail(), this.getPhoneNumber()};
     }
 
-    public void delete() {
-        if (!Input.getBooleanInput(String.format("Are You Sure You Want to Delete %s? (User ID: %s) [Y/N]: ", this.getName(), this.getUserID()), "Y", "N")) return;
-        UserManager.getInstance().deleteUser(this.getUserID());
-    }
 
     public void onDelete() {
 

@@ -92,10 +92,11 @@ public class Examiner extends User {
                     6. Add Assigned Exam
                     7. Remove Assigned Exam
                     8. Show Assigned Exams
-                    9. Back
+                    9. Delete Examiner
+                   10. Back
 
                     Your input: \
-                    """, 1, 9
+                    """, 1, 10
                 )
             ) {
                 case 1:
@@ -135,6 +136,9 @@ public class Examiner extends User {
                     this.printExams();
                     break;
                 case 9:
+                    this.delete();
+                    break;
+                case 10:
                     return;                
                 default:
                     break;
