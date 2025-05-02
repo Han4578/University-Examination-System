@@ -317,11 +317,11 @@ class SemesterCourse implements Comparable<SemesterCourse> {
         int totalContribution = 0; //Must be 100 for result to be valid
         for (Exam exam: this.exams.values()) {
             if (exam.getStudentMarks(student) == -1) return -1;//-1 Means unassigned, no marks, so result invalid
-            totalMarks += (float) exam.getStudentMarks(student) / exam.getTotalMarks();
+            totalMarks += (float) exam.getOverallPercentage() * exam.getStudentMarks(student) / exam.getTotalMarks();
             totalContribution += exam.getOverallPercentage();
         }
         if (totalContribution != 100) return -1;
-        else return Math.round(totalMarks * 100);
+        else return Math.round(totalMarks);
     }
 
     public String getCourseID() {

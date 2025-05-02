@@ -227,7 +227,7 @@ public class CourseManager{
         }
     }
 
-    public String inputCourseName(String message) {
+    private String inputCourseName(String message) {
         String cName = Input.getStringInput(message);
         if (cName.isBlank()) {
             System.out.println("Course Name cannot be blank");

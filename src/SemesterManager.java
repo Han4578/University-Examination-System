@@ -59,7 +59,7 @@ public class SemesterManager {
         }
     }
 
-    public void manageSemester(String semester){
+    private void manageSemester(String semester){
         if (!this.semesters.containsKey(semester)) {
             System.out.println("This semester does not exist");
             return;

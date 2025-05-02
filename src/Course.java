@@ -72,6 +72,11 @@ public class Course implements Comparable<Course> {
     public String toString() {
         return this.getCourseTitle() + " (" + creditHour + " Credits)";
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Course && this.compareTo((Course) obj) == 0;
+    }
 }
 
 

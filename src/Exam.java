@@ -52,39 +52,39 @@ class Exam implements Comparable<Exam> {
         this.semesterCourse = course;
     }
 
-	String getExamID(){
+    public String getExamID(){
 		return this.examID;
 	}
 
-	int getOverallPercentage() {
+	public int getOverallPercentage() {
     	return this.overallPercentage;
     }
     
-	String getType() {
+	public String getType() {
     	return this.examType;
     }
 
-    String getVenue() {
+    public String getVenue() {
     	return this.examVenue;
     }
     
-    String getDate() {
+    public String getDate() {
     	return this.examDate;
     }
     
-    String getTime() {
+    public String getTime() {
     	return this.examTime;
     }
     
-    int getDuration() {
+    public int getDuration() {
     	return this.examDuration;
     }
 
-	int getTotalMarks(){
+	public int getTotalMarks(){
 		return this.totalMarks;
 	}
 
-	SemesterCourse getSemesterCourse(){
+	public SemesterCourse getSemesterCourse(){
 		return this.semesterCourse;
 	}
 
@@ -99,31 +99,31 @@ class Exam implements Comparable<Exam> {
         return true;
     }
     
-    void setOverallPercentage(int percentage) {
+    public void setOverallPercentage(int percentage) {
     	this.overallPercentage = percentage;
     }
     
-	void setType(String type) {
+	public void setType(String type) {
     	this.examType = type;
     }
 
-    void setVenue(String venue) {
+    public void setVenue(String venue) {
     	this.examVenue = venue;
     }
     
-    void setDate(String date) {
+    public void setDate(String date) {
     	this.examDate = date;
     }
     
-    void setTime(String time) {
+    public void setTime(String time) {
     	this.examTime = time;
     }
     
-    void setDuration(int duration) {
+    public void setDuration(int duration) {
     	this.examDuration = duration;
     }
 
-    void gradeExam(){
+    public void gradeExam(){
         do {
             System.out.println(this.getResultsString());
             User userInput = (User) UserManager.getInstance().selectUserFromInput("Enter Student ID: ");
