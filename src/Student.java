@@ -224,6 +224,8 @@ public class Student extends User {
 
         for (Entry<String, TreeMap<String, SemesterCourse>> entry: this.semesterCourses.entrySet()) {
             System.err.println(entry.getKey() + " Results");
+            float currentGradePoint = totalGradePoint;
+            int currentCreditHour = totalCreditHour;
             for (SemesterCourse semesterCourse: entry.getValue().values()) {
                 int convertedMarks = semesterCourse.getStudentMarks(this);
                 String grade = Student.marksToGPA(convertedMarks);
@@ -261,6 +263,8 @@ public class Student extends User {
     
                 System.out.printf("%s\t%s\n", semesterCourse.getCourse().getCourseTitle(), grade);
             }
+
+            System.out.printf("\nGPA: %.02f\n", (totalCreditHour - currentCreditHour == 0)? 0: (totalGradePoint - currentGradePoint) / (totalCreditHour - currentCreditHour));
         }
 
         System.out.printf("\nCGPA: %.02f\n", (totalCreditHour == 0)? 0: totalGradePoint / totalCreditHour);
