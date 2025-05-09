@@ -1,4 +1,5 @@
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import java.util.Map;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -23,6 +24,7 @@ public class CourseManager{
         while (true){
             switch (Input.getIntInput(
             """
+            
             ----------Manage Courses---------- 
             1. Add new course 
             2. Edit course 
@@ -138,7 +140,7 @@ public class CourseManager{
     }
     
     //option 3: list out all the courses that inside TreeMap
-    private void showCourses(){
+    private void showCourses() {
         if (courses.isEmpty()){
             System.out.println("No such Courses!\n");
             return;
@@ -234,5 +236,15 @@ public class CourseManager{
             return null;
         }
         return cName;
+    }
+
+    @Override
+    public String toString() {
+        return String.join("\n", this.courses.values().stream().map(Course::toString).collect(Collectors.toList()));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof CourseManager;
     }
 }

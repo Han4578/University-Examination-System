@@ -1,8 +1,11 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 public class SemesterManager {
     private static SemesterManager instance = new SemesterManager();
@@ -60,6 +63,7 @@ public class SemesterManager {
     }
 
     private void manageSemester(String semester){
+        if (semester == null) return;
         if (!this.semesters.containsKey(semester)) {
             System.out.println("This semester does not exist");
             return;
@@ -86,12 +90,12 @@ public class SemesterManager {
                     createSemesterCourse(semester, semesterMap);
                     break;
                 case 2:
-                    String courseToManage = Input.getStringInput("Select Course to manage: ");
+                    String courseToManage = Input.getStringInput("Select Course ID to manage: ");
                     if (semesterMap.containsKey(courseToManage)) semesterMap.get(courseToManage).manage();
                     else System.out.println("The selected course does not exist in this semester");
                     break;
                 case 3:
-                    String courseToRemove = Input.getStringInput("Select Course to remove: ");
+                    String courseToRemove = Input.getStringInput("Select Course ID to remove: ");
                     if (semesterMap.containsKey(courseToRemove)) {
                         CourseManager.getInstance().getCourseByID(courseToRemove).removeSemesterCourse(semester);
                         this.removeSemesterCourse(semester, courseToRemove);
@@ -107,6 +111,33 @@ public class SemesterManager {
         }
     } 
 
+    private void saveSemesters() {
+        try {
+            File file = new File("src/data/semesters.txt");
+            File backup = new File("src/data/semesters.backup");
+            File temp = new File("src/data/semesters.temp");
+
+            backup.delete();
+            if (!file.renameTo(backup)) throw new IOException("Semester File Could Not Be Backed Up");
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(temp));
+
+            for (String semester: this.semesters.keySet()) {
+                bufferedWriter.write(semester);
+                bufferedWriter.newLine();
+            }
+
+            bufferedWriter.close();
+            if (!temp.renameTo(file)) {
+                if (backup.renameTo(file)) System.out.println("Semesters Could Not Be Saved, Previous Version Restored");
+                else System.out.println("Semesters Could Not Be Saved. Previous Version is Backed Up but Could Not Be Restored");
+            } else backup.delete();
+            System.out.println("Semesters Saved Successfully");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Semesters Could Not Be Saved, " + e.getMessage());
+        }
+    }
+
     
     public void load() {
         try {
@@ -114,6 +145,13 @@ public class SemesterManager {
 
             CourseManager courseManager = CourseManager.getInstance();
             UserManager userManager = UserManager.getInstance();
+
+            File semesterFile = new File("src/data/semesters.txt");
+            semesterFile.createNewFile();
+            BufferedReader semesterReader = new BufferedReader(new FileReader(semesterFile));
+            String semesterLine = "";
+            while ((semesterLine = semesterReader.readLine()) != null) this.semesters.put(semesterLine.trim(), new TreeMap<>());
+            semesterReader.close();
             
             for (File file: directory.listFiles()) {
                 BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -166,7 +204,7 @@ public class SemesterManager {
         System.out.println("Semesters");
         System.out.println(String.join("\n", this.semesters.keySet()));
         String semester = this.getSemesterInput("\nEnter Semester (YYYYMM): ");
-        if (!this.semesters.containsKey(semester)) {
+        if (semester == null || !this.semesters.containsKey(semester)) {
             System.out.println("Semester Not Found");
             return null;
         }
@@ -193,33 +231,42 @@ public class SemesterManager {
     }
 
     private void createNewSemester(String semester){
+        if (semester == null) return;
         if(semesters.containsKey(semester))System.out.println("The Semester Already Exists");
         else {
             semesters.put(semester, new TreeMap<>());
             System.out.println("Semester Successfully Created");
+            this.saveSemesters();
         }
     }
 
     private void removeSemester(String semester) {
         if (semester == null) return;
-        if (!Input.getBooleanInput(String.format("Are You Sure You Want to Remove Semester %s? [Y/N]", semester), "Y", "N")) return;
+        if (!this.semesters.containsKey(semester)) {
+            System.out.println("Semester Not Found");
+            return;
+        }
+        if (!Input.getBooleanInput(String.format("Are You Sure You Want to Remove Semester %s? [Y/N]: ", semester), "Y", "N")) return;
         for (SemesterCourse semesterCourse: this.semesters.get(semester).values()) {
             semesterCourse.onDelete();
             semesterCourse.getCourse().removeSemesterCourse(semester);
         }
         this.semesters.remove(semester);
         System.out.println("Semester Successfully Removed");
+        this.saveSemesters();
     }
 
     public void removeSemesterCourse(String semester, String course) {
         if (!Input.getBooleanInput(String.format("Are You Sure You Want to Delete Course %s in Semester %s? [Y/N]: ", course, semester), "Y", "N")) return;
         this.semesters.get(semester).remove(course).onDelete();
+        System.out.println("Semester Course Successfully Deleted");
     }
 
     private String getSemesterInput(String message){
         while (true) {
             String input = Input.getStringInput(message);
-            if (input.matches("^\\s*\\d{4}(0\\d|1[0-2])\\s*$")) return input.trim();
+            if (input.isBlank()) return null;
+            if (input.matches("^\\d{4}(0[1-9]|1[0-2])$")) return input;
             System.out.println("Input does not match the semester format (YYYYMM)\n");
         }
     }
@@ -231,5 +278,22 @@ public class SemesterManager {
                 System.out.println(CourseManager.getInstance().getCourseByID(courseID));
             }
         } else System.out.println("No Courses Found");
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Entry<String, TreeMap<String, SemesterCourse>> entry: this.semesters.entrySet()) {
+            stringBuilder.append(entry.getKey()).append("\n");
+            for (String courseID: entry.getValue().keySet()) {
+                stringBuilder.append(CourseManager.getInstance().getCourseByID(courseID)).append("\n");
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof SemesterManager;
     }
 }

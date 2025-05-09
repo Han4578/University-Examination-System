@@ -1,4 +1,4 @@
 src/*.class
 bin/
 src/Test.java
-data/
+src/data/

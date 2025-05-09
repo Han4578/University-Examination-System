@@ -1,5 +1,5 @@
 public class Admin extends User {
-    final public static int NUMBER_OF_PARAMETERS = 5;
+    public static final int NUMBER_OF_PARAMETERS = 5;
     private static int lastID = 0;
 
     public Admin() {

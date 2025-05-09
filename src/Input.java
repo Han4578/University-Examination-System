@@ -40,7 +40,7 @@ public class Input {
 
     public static String getStringInput(String message) {
         System.out.print(message);
-        return scanner.nextLine();
+        return scanner.nextLine().trim();
     }
 
     public static String getStringInput(String message, String defaultString) {
@@ -63,7 +63,7 @@ public class Input {
         while (true) {
             String input = Input.getStringInput(message);
             if (input.isBlank()) return "Not Set";
-            if (input.matches("^\\s*(0?[1-9]|[1-2]\\d|3[0-1])/(0?[1-9]|1[0-2]?)/\\d{4}\\s*$")) return input.trim();
+            if (input.matches("^\\s*(0?[1-9]|[1-2]\\d|3[0-1])/(0?[1-9]|1[0-2]?)/\\d{4}\\s*$")) return input;
             else System.out.println("Input does not match date format (DD/MM/YYYY)\n");
         }
     }
@@ -72,7 +72,7 @@ public class Input {
         while (true) {
             String input = Input.getStringInput(message);
             if (input.isBlank()) return "Not Set";
-            if (input.matches("^\\s*([0-1]?\\d|2[0-3]):([0-5]?\\d)\\s*$")) return input.trim();
+            if (input.matches("^\\s*([0-1]?\\d|2[0-3]):([0-5]?\\d)\\s*$")) return input;
             else System.out.println("Input does not match time format (HH:MM)\n");
         }
     }

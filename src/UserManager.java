@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.util.TreeMap;
 
 public class UserManager {
-    final public static String DELIMITER = "|";
-    final public static String ESCAPED_DELIMITER = "\\|";
+    public static final String DELIMITER = "|";
+    public static final String ESCAPED_DELIMITER = "\\|";
     private static UserManager instance = new UserManager();
-    enum userCategories {ADMIN, EXAMINER, STUDENT}
+    private enum userCategories {ADMIN, EXAMINER, STUDENT}
     private TreeMap<String, Admin> admins = new TreeMap<>();
     private TreeMap<String, Student> students = new TreeMap<>();
     private TreeMap<String, Examiner> examiners = new TreeMap<>();
@@ -63,7 +63,7 @@ public class UserManager {
                 Input.getIntInput(String.format(
                     """
 
-                    Manage %1$s
+                    Manage %1$ss
                     1. Create %1$s
                     2. Delete %1$s
                     3. Show %1$s List
@@ -119,12 +119,7 @@ public class UserManager {
                             break;
                     }
 
-                    for (User user: userList.values()) {
-                        for (String param: user.getParameters()) {
-                            System.out.printf("%-21s", param);
-                        }
-                        System.out.println("\n");
-                    }
+                    System.out.println(this.userListToString(userList));
                     break;
                 case 4:
                     String userIDtoEdit = Input.getStringInput(String.format("Enter %s ID to Edit: ", displayCategory));
@@ -282,6 +277,19 @@ public class UserManager {
         return null;
     }
 
+    private String userListToString(TreeMap<String, ? extends User> userList) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (User user: userList.values()) {
+            for (String param: user.getParameters()) {
+                stringBuilder.append(String.format("%-21s", param));
+            }
+            stringBuilder.append("\n");
+        }
+
+        return stringBuilder.toString();
+    }
+
     public User selectUserFromInput(String message) {
         return this.getUserByID(Input.getStringInput(message));
     }
@@ -312,5 +320,19 @@ public class UserManager {
         }
         
         System.out.println("User Not Found");
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append(Student.getParameterTitle()).append("\n");
+        stringBuilder.append(this.userListToString(this.students));
+        stringBuilder.append(Examiner.getParameterTitle()).append("\n");
+        stringBuilder.append(this.userListToString(this.examiners));
+        stringBuilder.append(Admin.getParameterTitle()).append("\n");
+        stringBuilder.append(this.userListToString(this.admins));
+
+        return stringBuilder.toString();
     }
 }

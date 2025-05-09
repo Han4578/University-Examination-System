@@ -1,5 +1,5 @@
 public abstract class User implements Comparable<User> {
-    enum ReturnState {LOG_OUT, EXIT}
+    public enum ReturnState {LOG_OUT, EXIT}
     private String userID;
     private String name;
     private String password;

@@ -2,7 +2,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 public class Student extends User {
-    final public static int NUMBER_OF_PARAMETERS = 6;
+    public static final int NUMBER_OF_PARAMETERS = 6;
     private static int lastID = 0;
     private String programme;
     TreeMap<String, TreeMap<String, SemesterCourse>> semesterCourses = new TreeMap<>();

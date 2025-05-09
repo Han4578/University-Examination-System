@@ -1,7 +1,7 @@
 import java.util.TreeMap;
 
 public class Examiner extends User {
-    final public static int NUMBER_OF_PARAMETERS = 5;
+    public static final int NUMBER_OF_PARAMETERS = 5;
     private static int lastID = 0;
     TreeMap<String, Exam> assignedExams = new TreeMap<>();
 
